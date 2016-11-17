@@ -1,0 +1,20 @@
+{
+  "name": "leandrogoncalves/vc_custom_carousel",
+  "description": "Wordpress plugin for implements a custom carrousel from any post types",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Leandro",
+      "email": "contato.leandrogoncalves@gmail.com"
+    }
+  ],
+  "version": "master",
+  "type": "wordpress-plugin",
+  "require": {
+    "composer/installers": "v1.0.6"
+  },
+  "dist": {
+    "url": "https://github.com:leandrogoncalves/vc_custom_carousel.git",
+    "type": "git"
+  }
+}
