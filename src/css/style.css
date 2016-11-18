@@ -1,0 +1,17 @@
+.vc_cc{
+    width: 100%;
+}
+
+.vc_cc_item{
+    margin: 10px;
+    background-color:#DBECF1;
+}
+
+.vc_cc_item_img{
+    height: 200px;
+    background-size: cover;
+}
+
+.vc_cc_body{
+    padding: 15px;
+}

@@ -56,7 +56,7 @@ class VcCustomCarousel {
 		$this->plugin_name = 'vc_custom_carousel';
 		$this->version = '1.0.0';
 		$this->site_url = get_site_url();
-		$this->plugin_path = plugin_dir_path( dirname( __FILE__ ) );
+		$this->plugin_url = plugin_dir_url( __FILE__  );
 
 	}
 
@@ -83,9 +83,11 @@ class VcCustomCarousel {
 	/**
 	 * Funcoes para registrar arquivo CSS
 	 */
-
-	protected function registerStyle(){
-		wp_register_style( 'vc_cc_style', $this->plugin_path . "/css/style.css");
+	protected function registerStyle()
+	{
+		wp_register_style( 'vc_cc_style', $this->plugin_url . "css/style.css");
+		wp_register_style( 'slick', $this->plugin_url . "css/slick.css");
+		wp_register_style( 'slick-theme', $this->plugin_url . "css/slick-theme.css");
 	}// fim do metodo
 
 	/**
@@ -94,8 +96,29 @@ class VcCustomCarousel {
 	protected function enqueueStyles()
 	{
 		wp_enqueue_style('vc_cc_style');
+		wp_enqueue_style('slick');
+		wp_enqueue_style('slick-theme');
 	}// fim do metodo
 
+	/**
+	 * Função para registra scripts
+	 */
+	protected function registerScripts()
+	{
+		wp_enqueue_script( 'slick-js', $this->plugin_url . 'js/slick.min.js',
+			array( 'jquery' ),
+			'3.3.7',
+			true
+		);
+	}
+
+	/**
+	 * Funcoes para enfileirar os estilos
+	 */
+	protected function enqueueScripts(){
+		wp_enqueue_script('jquery');
+//		wp_enqueue_script('slick');
+	}
 
 	/**
 	 * Fucao para registrar o shortcode
@@ -107,7 +130,7 @@ class VcCustomCarousel {
 	/**
 	 * Shorcode para lsita de saidas em carrossel
 	 */
-	public function shortcodelistaSaidasCarrossel($attributes){
+	public function shortcodeVcCustomCarousel($attributes){
 		$atts = shortcode_atts(array(
 			'tags'            => '',
 			'post_type'       => '',
@@ -124,48 +147,56 @@ class VcCustomCarousel {
 
 		if ($query_rs instanceof WP_Query && $query_rs->have_posts()):
 
-			//AS TAGS ABAIXO SAO SHORTCODES DO PLUGIN VISUAL COMPOSER CONVERTIDAS PARA XML PARA FACILITAR O ENTENDIMENTO
 			ob_start();
 			?>
-			<vc_row type="vc_default" css=".vc_custom_1474411094147{margin-right: 0px !important;margin-left: 0px !important;}">
-				<vc_column>
-					<ultimate_carousel title_text_typography="" slides_on_desk="3" slides_on_tabs="2" slides_on_mob="1" speed="600" autoplay="off" arrow_style="circle-bg" arrow_bg_color="rgba(202,202,202,0.7)" arrow_color="#ffffff" arrow_size="40" dots_color="#cacaca" adaptive_height="on" item_space="25" css_ad_caraousel=".vc_custom_1478285370868{margin-bottom: 0px !important;padding-right: 0px !important;padding-bottom: 0px !important;padding-left: 0px !important;}">
-						<?php
-						while ($query_rs->have_posts()) : $query_rs->the_post();
+			<div class="vc_cc">
+				<?php
+				while ($query_rs->have_posts()) : $query_rs->the_post();
 
-								$image = "";
-								if (has_post_thumbnail( $query_rs->ID ) ):
-									$image = wp_get_attachment_image_src( get_post_thumbnail_id( $query_rs->ID ), 'single-post-thumbnail' );
-									if(isset($image[0])){
-										$image = $image[0];
-									}
-								endif;
+					$image = "";
+					if (has_post_thumbnail() ):
+						$image = wp_get_attachment_image_src( get_post_thumbnail_id(), 'single-post-thumbnail' );
+						if(isset($image[0])){
+							$image = $image[0];
+						}
+					endif;
 
-								$link = get_permalink($query_rs->ID);
-								$title = $query_rs->post_title;
-									?>
-									<vc_row_inner css=".vc_custom_1478284419129{background-color: #e5e5e5 !important;}">
-										<vc_column_inner el_class="cit_carousel_txtWrapper">
-											#|a href="<?php echo $link ?>"|##|img class="img_cit_carousel" src="<?php echo $image ?>" alt="<?php echo $title ?>"|##|/a|#
-											<vc_column_text css=".vc_custom_1478284352517{padding-top: 20px !important;padding-right: 20px !important;padding-bottom: 20px !important;padding-left: 20px !important;}">
-												#|h4|#<?php echo get_field('data_extenso') ?>#|/h4|#
-												#|h3|#<?php echo $title ?>#|/h3|#
-												#|p|#<?php echo substr($query_rs->post_excerpt,0,100), '...' ?>#|/p|#
-												#|h6|##|a href="<?php echo $link ?>"|# <?php echo _t("Veja mais") ?> #|/a|##|/h6|#
-											</vc_column_text>
-										</vc_column_inner>
-									</vc_row_inner>
-									<?php
-						endwhile;
-						?>
-					</ultimate_carousel>
-				</vc_column>
-			</vc_row>
+					$link = get_permalink();
+					$title = get_the_title();
+					$excerpt = get_the_excerpt();
+
+					?>
+						<div class="vc_cc_item">
+							<div class="vc_cc_header" >
+								<a href="<?php echo $link ?>"><div class="vc_cc_item_img" style="background-image: url('<?php echo $image ?>') " alt="<?php echo $title ?>;"></div></a>
+							</div>
+							<div class="vc_cc_body">
+								<h4><?php echo get_field('data_extenso') ?></h4>
+								<h3><?php echo $title ?></h3>
+								<p><?php echo substr($excerpt,0,100), '...' ?></p>
+								<h6><a href="<?php echo $link ?>"><?php echo _t("Veja mais") ?></a></h6>
+							</div>
+						</div>
+					<?php
+				endwhile;
+				?>
+			</div>
+			<script src="https://code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+			<script type="text/javascript">
+				$(document).ready(function() {
+					$(".vc_cc").slick({
+						dots: true,
+						infinite: true,
+						slidesToShow: 3,
+						slidesToScroll: 3
+					});
+				});
+			</script>
 			<?php
 			$shortcode = ob_get_clean();
 		endif;
 
-		echo do_shortcode($this->revert_tags($shortcode));
+		echo $shortcode;
 	}
 
 	/**
@@ -176,6 +207,8 @@ class VcCustomCarousel {
 	public function run() {
 		$this->registerStyle();
 		$this->enqueueStyles();
+		$this->registerScripts();
+		$this->enqueueScripts();
 		$this->registerShortcode();
 	}
 
