@@ -12,7 +12,7 @@
 if(!defined('ABSPATH')) die('Wordpress is required');
 
 
-abstract class VcCustomCarousel {
+class VcCustomCarousel {
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
 	 * the plugin.
@@ -38,24 +38,8 @@ abstract class VcCustomCarousel {
 	 * @var      string    $version    The current version of the plugin.
 	 */
 	protected $version;
-	/**
-	 * array de variáveis
-	 *
-	 * @var array
-	 */
-	protected $vars_main = [];
-	/**
-	 * Option name
-	 *
-	 * @var string
-	 */
-	protected $_option_name = 'wpmg_options';
-	/**
-	 * Capability name
-	 *
-	 * @var string
-	 */
-	private $_capability = 'wpmg_manager_cap';
+
+
 	/**
 	 * Define the core functionality of the plugin.
 	 *
@@ -65,218 +49,136 @@ abstract class VcCustomCarousel {
 	 *
 	 * @since    1.0.0
 	 */
-	protected function __construct() {
+	public function __construct() {
 		if (version_compare(PHP_VERSION, '5.5.0', '<')) {
 			wp_die(__("This plugin require the PHP version 5.5.0 or later ", 'grp_plugin'));
 		}
-		$this->plugin_name = 'wp-masonry-grid';
+		$this->plugin_name = 'vc_custom_carousel';
 		$this->version = '1.0.0';
 		$this->site_url = get_site_url();
 		$this->plugin_path = plugin_dir_path( dirname( __FILE__ ) );
-		$this->load_dependencies();
-		$this->loader = new WP_Masonry_Grid_Loader();
-		$this->view = new WP_Masonry_Grid_View();
-		$this->set_locale();
-		if(!is_admin()){
-			$this->define_public_hooks();
-		}else{
-			//		$this->define_admin_hooks();
-		}
+
 	}
-	/**
-	 * seta uma variavel passando o nome e o valor para o um vetor associativo
-	 * @param string $name  nome da variável
-	 * @param string $value valor
-	 */
-	protected function set($name, $value='')
-	{
-		$this->vars_main[$name] = $value;
-		return $this;
-	}
-	/**
-	 * retorna o valor da variável chamada por $name
-	 * @param  string $name nome da variavel
-	 * @return mixed       	valor da variavel
-	 */
-	public function __get($name)
-	{
-		if(!isset($this->vars_main[$name])) $this->set($name);
-		return  $this->vars_main[$name];
-	}
+
 	/**
 	 * Get query args
 	 * @return array|string
 	 * @link http://php.net/manual/pt_BR/function.filter-input.php
 	 */
 	protected function getResults(array $filter = []){
-		$query_hooks = new WP_Masonry_Grid_Query(
-			$this->type,
-			$this->order,
-			$this->orderby,
-			$this->posts_per_page,
-			$this->paged,
-			'publish'
-		);
-		$this->loader->add_filter('posts_where', $query_hooks, 'post_where', 10, 2)->run();
-		$result  = $query_hooks->getResults($filter);
-		return $result;
+		$default_fields = [
+			'post_type'       => 'posts',
+			'order'           => '',
+			'orderby'         => '',
+			'posts_per_page'  => '9',
+			'paged'           => '1',
+			'post_status'     => 'publish'
+		];
+
+		$filter = array_merge($default_fields, $filter);
+
+		return  new WP_Query($filter);
 	}
+
 	/**
-	 * Load the required dependencies for this plugin.
-	 *
-	 * Include the following files that make up the plugin:
-	 *
-	 * - WP_Masonry_Grid_Loader. Orchestrates the hooks of the plugin.
-	 * - WP_Masonry_Grid_i18n. Defines internationalization functionality.
-	 * - WP_Masonry_Grid_Admin. Defines all hooks for the admin area.
-	 * - WP_Masonry_Grid_Public. Defines all hooks for the public side of the site.
-	 *
-	 * Create an instance of the loader which will be used to register the hooks
-	 * with WordPress.
-	 *
-	 * @since    1.0.0
-	 * @access   private
+	 * Funcoes para registrar arquivo CSS
 	 */
-	protected function load_dependencies() {
-		/**
-		 * The class responsible for orchestrating the actions and filters of the
-		 * core plugin.
-		 */
-		require_once $this->plugin_path . 'core/WP_Masonry_Grid_Loader.php';
-		/**
-		 * The class responsible for defining internationalization functionality
-		 * of the plugin.
-		 */
-		require_once $this->plugin_path  . 'core/WP_Masonry_Grid_i18n.php';
-		/***
-		 * Class reponsiable for wp query implements
-		 */
-		require_once $this->plugin_path  . 'core/WP_Masonry_Grid_Query.php';
-		/***
-		 * Class reponsiable for wp ajax implements
-		 */
-		require_once $this->plugin_path  . 'core/WP_Masonry_Grid_Ajax.php';
-		/***
-		 * Class reponsiable for load views implements
-		 */
-		require_once $this->plugin_path  . 'core/WP_Masonry_Grid_View.php';
-		/***
-		 * Class reponsiable for load views implements
-		 */
-		require_once $this->plugin_path  . 'core/WP_Masonry_Grid_Rewrite.php';
-		/***
-		 * Class reponiable for query string POST or GET
-		 */
-		require_once $this->plugin_path  . 'frontend/WP_Masonry_Grid_Static.php';
-		/**
-		 * The class responsible for defining all actions that occur in the public-facing
-		 * side of the site.
-		 */
-		require_once $this->plugin_path  . 'frontend/WP_Masonry_Grid_Public.php';
-		/**
-		 * The class responsible for defining all actions that occur in the admin area.
-		 */
-//		require_once $this->plugin_path. 'backend/WP_Masonry_Grid_Admin.php';
-	}
+
+	protected function registerStyle(){
+		wp_register_style( 'vc_cc_style', $this->plugin_path . "/css/style.css");
+	}// fim do metodo
+
 	/**
-	 * Define the locale for this plugin for internationalization.
-	 *
-	 * Uses the WP_Masonry_Grid_i18n class in order to set the domain and to register the hook
-	 * with WordPress.
-	 *
-	 * @since    1.0.0
-	 * @access   private
+	 * Funcoes para enfileirar os estilos
 	 */
-	protected function set_locale() {
-		$this->plugin_i18n = new WP_Masonry_Grid_i18n();
-		$this->plugin_i18n->set_domain( $this->get_plugin_name() );
-		$this->loader->add_action( 'plugins_loaded', $this->plugin_i18n, 'load_plugin_textdomain' );
-	}
-	/**
-	 * Register all of the hooks related to the admin area functionality
-	 * of the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	protected function define_admin_hooks() {
-		$this->plugin_admin = new WP_Masonry_Grid_Admin( $this->get_plugin_name(), $this->get_version() );
-		$this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_styles' );
-		$this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_scripts' );
-	}
-	/**
-	 * Register all of the hooks related to the public-facing functionality
-	 * of the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	protected function define_public_hooks() {
-		$this->plugin_public = new WP_Masonry_Grid_Public( $this->get_plugin_name(), $this->get_version() );
-		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_scripts' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'localizeAjaxScript' );
-		$this->ajax_plugin = new WP_Masonry_Grid_Ajax( $this->get_plugin_name(), $this->get_version() );
-		$this->loader->add_action( 'wp_ajax_nopriv_wpmg_ajax_pagination', $this->ajax_plugin , 'AjaxPagination' );
-		$this->loader->add_action( 'wp_ajax_wpmg_ajax_pagination', $this->ajax_plugin , 'AjaxPagination' );
-		$this->rewrite = new WP_Masonry_Grid_Rewrite( $this->get_plugin_name(), $this->get_version(), $this->_option_name );
-		$this->loader->add_action( 'init', $this->rewrite , 'load_all_rules' );
-	}
-	/**
-	 * Create the options
-	 */
-	protected function _update_options(array $opt = [])
+	protected function enqueueStyles()
 	{
-		delete_option($this->_option_name);
-		$options = get_option( $this->_option_name );
-		if( !empty($options) ){
-			$insert_opt = array(
-				'type'         => (!empty($opt['post'])) ? $opt['post'] : $options['type'],
-				'posts_per_page'  => (!empty($opt['posts_per_page'])) ? $opt['posts_per_page'] : $options['posts_per_page'],
-				'order'        => (!empty($opt['order'])) ? $opt['order'] : $options['order'],
-				'orderby'      => (!empty($opt['orderby'])) ? $opt['orderby'] : $options['orderby'],
-				'post_status'  => (!empty($opt['post_status'])) ? $opt['post_status'] : $options['post_status'],
-				'tax'          => (!empty($opt['tax'])) ? $opt['tax'] : $options['tax'],
-				'term'         => (!empty($opt['term'])) ? $opt['term'] : $options['term'],
-				'acf'          => (!empty($opt['acf'])) ? $opt['acf'] : $options['acf'],
-				'paged'        => (!empty($opt['paged'])) ? $opt['paged'] : $options['paged'],
-				'pagination'   => (!empty($opt['pagination'])) ? $opt['pagination'] : $options['pagination'],
-			);
-			update_option( $this->_option_name, $insert_opt );
-		}
-		else
-		{
-			$update_opt = array(
-				'type'         => (!empty($opt['post'])) ? $opt['post'] : $this->type,
-				'posts_per_page'     => (!empty($opt['posts_per_page'])) ? $opt['posts_per_page'] :  $this->posts_per_page,
-				'order'        => (!empty($opt['order'])) ? $opt['order'] :  $this->order,
-				'orderby'      => (!empty($opt['orderby'])) ? $opt['orderby'] :  $this->orderby,
-				'post_status'  => (!empty($opt['post_status'])) ? $opt['post_status'] : $this->post_status,
-				'tax'          => (!empty($opt['tax'])) ? $opt['tax'] :  $this->tax,
-				'term'         => (!empty($opt['term'])) ? $opt['term'] :  $this->term,
-				'acf'          => (!empty($opt['acf'])) ? $opt['acf'] :  $this->acf,
-				'paged'        => (!empty($opt['paged'])) ? $opt['paged'] :  $this->paged,
-				'pagination'   => (!empty($opt['pagination'])) ? $opt['pagination'] :  $this->pagination,
-			);
-			add_option( $this->_option_name, $update_opt );
-		}
-	}
+		wp_enqueue_style('vc_cc_style');
+	}// fim do metodo
+
+
 	/**
-	 * Create the capability
+	 * Fucao para registrar o shortcode
 	 */
-	private function _create_capability()
-	{
-		$role = get_role('administrator');
-		if( !$role->has_cap( $this->_capability ) )  $role->add_cap($this->_capability );
+	protected function registerShortcode(){
+		add_shortcode('vc_custom_carousel', array($this, 'shortcodeVcCustomCarousel'));
 	}
+
+	/**
+	 * Shorcode para lsita de saidas em carrossel
+	 */
+	public function shortcodelistaSaidasCarrossel($attributes){
+		$atts = shortcode_atts(array(
+			'tags'            => '',
+			'post_type'       => '',
+			'order'           => '',
+			'orderby'         => '',
+			'posts_per_page'  => '',
+			'paged'           => '',
+			'post_status'     => '',
+		), $attributes);
+
+		$shortcode = null;
+
+		$query_rs = $this->getResults($atts);
+
+		if ($query_rs instanceof WP_Query && $query_rs->have_posts()):
+
+			//AS TAGS ABAIXO SAO SHORTCODES DO PLUGIN VISUAL COMPOSER CONVERTIDAS PARA XML PARA FACILITAR O ENTENDIMENTO
+			ob_start();
+			?>
+			<vc_row type="vc_default" css=".vc_custom_1474411094147{margin-right: 0px !important;margin-left: 0px !important;}">
+				<vc_column>
+					<ultimate_carousel title_text_typography="" slides_on_desk="3" slides_on_tabs="2" slides_on_mob="1" speed="600" autoplay="off" arrow_style="circle-bg" arrow_bg_color="rgba(202,202,202,0.7)" arrow_color="#ffffff" arrow_size="40" dots_color="#cacaca" adaptive_height="on" item_space="25" css_ad_caraousel=".vc_custom_1478285370868{margin-bottom: 0px !important;padding-right: 0px !important;padding-bottom: 0px !important;padding-left: 0px !important;}">
+						<?php
+						while ($query_rs->have_posts()) : $query_rs->the_post();
+
+								$image = "";
+								if (has_post_thumbnail( $query_rs->ID ) ):
+									$image = wp_get_attachment_image_src( get_post_thumbnail_id( $query_rs->ID ), 'single-post-thumbnail' );
+									if(isset($image[0])){
+										$image = $image[0];
+									}
+								endif;
+
+								$link = get_permalink($query_rs->ID);
+								$title = $query_rs->post_title;
+									?>
+									<vc_row_inner css=".vc_custom_1478284419129{background-color: #e5e5e5 !important;}">
+										<vc_column_inner el_class="cit_carousel_txtWrapper">
+											#|a href="<?php echo $link ?>"|##|img class="img_cit_carousel" src="<?php echo $image ?>" alt="<?php echo $title ?>"|##|/a|#
+											<vc_column_text css=".vc_custom_1478284352517{padding-top: 20px !important;padding-right: 20px !important;padding-bottom: 20px !important;padding-left: 20px !important;}">
+												#|h4|#<?php echo get_field('data_extenso') ?>#|/h4|#
+												#|h3|#<?php echo $title ?>#|/h3|#
+												#|p|#<?php echo substr($query_rs->post_excerpt,0,100), '...' ?>#|/p|#
+												#|h6|##|a href="<?php echo $link ?>"|# <?php echo _t("Veja mais") ?> #|/a|##|/h6|#
+											</vc_column_text>
+										</vc_column_inner>
+									</vc_row_inner>
+									<?php
+						endwhile;
+						?>
+					</ultimate_carousel>
+				</vc_column>
+			</vc_row>
+			<?php
+			$shortcode = ob_get_clean();
+		endif;
+
+		echo do_shortcode($this->revert_tags($shortcode));
+	}
+
 	/**
 	 * Run the loader to execute all of the hooks with WordPress.
 	 *
 	 * @since    1.0.0
 	 */
 	public function run() {
-		$this->loader->run();
+		$this->registerStyle();
+		$this->enqueueStyles();
+		$this->registerShortcode();
 	}
+
 	/**
 	 * The name of the plugin used to uniquely identify it within the context of
 	 * WordPress and to define internationalization functionality.
@@ -287,15 +189,7 @@ abstract class VcCustomCarousel {
 	public function get_plugin_name() {
 		return $this->plugin_name;
 	}
-	/**
-	 * The reference to the class that orchestrates the hooks with the plugin.
-	 *
-	 * @since     1.0.0
-	 * @return    WP_Masonry_Grid_Loader    Orchestrates the hooks of the plugin.
-	 */
-	public function get_loader() {
-		return $this->loader;
-	}
+
 	/**
 	 * Retrieve the version number of the plugin.
 	 *
@@ -304,5 +198,33 @@ abstract class VcCustomCarousel {
 	 */
 	public function get_version() {
 		return $this->version;
+	}
+
+	/**
+	 * Convert shortcode tags to xml tags
+	 *
+	 * @param $content
+	 * @return mixed
+	 */
+	public function invert_tags($content){
+		$content =  str_replace('<','#|',$content );
+		$content =  str_replace('>','|#',$content );
+		$content =  str_replace('[','<',$content );
+		$content =  str_replace(']','>',$content );
+		return $content;
+	}
+
+	/**
+	 * Convert xml tags to shortcode tags
+	 *
+	 * @param $content
+	 * @return mixed
+	 */
+	public function revert_tags($content){
+		$content =  str_replace('<','[',$content );
+		$content =  str_replace('>',']',$content );
+		$content =  str_replace('#|','<',$content );
+		$content =  str_replace('|#','>',$content );
+		return $content;
 	}
 }
