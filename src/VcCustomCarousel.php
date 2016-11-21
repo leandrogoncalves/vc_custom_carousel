@@ -141,59 +141,84 @@ class VcCustomCarousel {
 			'post_status'     => '',
 		), $attributes);
 
+		global $post;
+		$tags = [];
+
+		$tags_per_post = wp_get_post_tags($post->ID,array( 'fields' => 'slugs' ));
+
+
 		$shortcode = null;
 
 		$query_rs = $this->getResults($atts);
 
 		if ($query_rs instanceof WP_Query && $query_rs->have_posts()):
 
-			ob_start();
-			?>
-			<div class="vc_cc">
-				<?php
-				while ($query_rs->have_posts()) : $query_rs->the_post();
-
-					$image = "";
-					if (has_post_thumbnail() ):
-						$image = wp_get_attachment_image_src( get_post_thumbnail_id(), 'single-post-thumbnail' );
-						if(isset($image[0])){
-							$image = $image[0];
-						}
-					endif;
-
-					$link = get_permalink();
-					$title = get_the_title();
-					$excerpt = get_the_excerpt();
-
-					?>
-						<div class="vc_cc_item">
-							<div class="vc_cc_header" >
-								<a href="<?php echo $link ?>"><div class="vc_cc_item_img" style="background-image: url('<?php echo $image ?>') " alt="<?php echo $title ?>;"></div></a>
-							</div>
-							<div class="vc_cc_body">
-								<h4><?php echo get_field('data_extenso') ?></h4>
-								<h3><?php echo $title ?></h3>
-								<p><?php echo substr($excerpt,0,100), '...' ?></p>
-								<h6><a href="<?php echo $link ?>"><?php echo _t("Veja mais") ?></a></h6>
-							</div>
-						</div>
-					<?php
-				endwhile;
+				ob_start();
 				?>
-			</div>
-			<script src="https://code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
-			<script type="text/javascript">
-				$(document).ready(function() {
-					$(".vc_cc").slick({
-						dots: true,
-						infinite: true,
-						slidesToShow: 2,
-						slidesToScroll: 2
+				<div class="vc_cc">
+					<?php
+					while ($query_rs->have_posts()) : $query_rs->the_post();
+
+						$encontrou = false;
+
+						$the_ID = get_the_ID();
+						$tags =  wp_get_post_tags($the_ID ,array( 'fields' => 'slugs' ));
+
+						foreach ($tags_per_post as $tpp){
+							foreach ($tags as $tag){
+								if($tpp === $tag){
+									$encontrou = true;
+								}
+							}
+						}
+
+					if($encontrou)
+					{
+						$image = "";
+						if (has_post_thumbnail() ):
+							$image = wp_get_attachment_image_src( get_post_thumbnail_id(), 'single-post-thumbnail' );
+							if(isset($image[0])){
+								$image = $image[0];
+							}
+						endif;
+
+						$link = get_permalink();
+						$title = get_the_title();
+						$excerpt = get_the_excerpt();
+
+						?>
+							<div class="vc_cc_item">
+								<div class="vc_cc_header" >
+									<a href="<?php echo $link ?>"><div class="vc_cc_item_img" style="background-image: url('<?php echo $image ?>') " alt="<?php echo $title ?>;"></div></a>
+								</div>
+								<div class="vc_cc_body">
+									<h4><?php echo get_field('data_extenso') ?></h4>
+									<h3><?php echo $title ?></h3>
+									<p><?php echo substr($excerpt,0,100), '...' ?></p>
+									<h6><a href="<?php echo $link ?>"><?php echo _t("Veja mais") ?></a></h6>
+								</div>
+							</div>
+						<?php
+						$encontrou = false;
+					}
+						endwhile;
+					?>
+				</div>
+				<script src="https://code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+				<script type="text/javascript">
+					$(document).ready(function() {
+						$(".vc_cc").slick({
+							dots: true,
+							infinite: true,
+							slidesToShow: 2,
+							slidesToScroll: 2
+						});
 					});
-				});
-			</script>
-			<?php
-			$shortcode = ob_get_clean();
+				</script>
+				<?php
+				$shortcode = ob_get_clean();
+
+
 		endif;
 
 		echo $shortcode;
