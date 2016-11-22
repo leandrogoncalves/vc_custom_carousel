@@ -85,19 +85,14 @@ class VcCustomCarousel {
 	 */
 	protected function registerStyle()
 	{
-		wp_register_style( 'vc_cc_style', $this->plugin_url . "css/style.css");
-		wp_register_style( 'slick', $this->plugin_url . "css/slick.css");
-		wp_register_style( 'slick-theme', $this->plugin_url . "css/slick-theme.css");
-	}// fim do metodo
-
-	/**
-	 * Funcoes para enfileirar os estilos
-	 */
-	protected function enqueueStyles()
-	{
-		wp_enqueue_style('vc_cc_style');
-		wp_enqueue_style('slick');
-		wp_enqueue_style('slick-theme');
+		add_action( 'wp_enqueue_scripts', function(){
+			wp_register_style( 'vc_cc_style', $this->plugin_url . "css/style.css");
+			wp_register_style( 'slick', $this->plugin_url . "css/slick.css");
+			wp_register_style( 'slick-theme', $this->plugin_url . "css/slick-theme.css");
+			wp_enqueue_style('vc_cc_style');
+			wp_enqueue_style('slick');
+			wp_enqueue_style('slick-theme');
+		});
 	}// fim do metodo
 
 	/**
@@ -105,19 +100,15 @@ class VcCustomCarousel {
 	 */
 	protected function registerScripts()
 	{
-		wp_enqueue_script( 'slick-js', $this->plugin_url . 'js/slick.min.js',
-			array( 'jquery' ),
-			'3.3.7',
-			true
-		);
-	}
-
-	/**
-	 * Funcoes para enfileirar os estilos
-	 */
-	protected function enqueueScripts(){
-		wp_enqueue_script('jquery');
-//		wp_enqueue_script('slick');
+		add_action( 'wp_enqueue_scripts', function(){
+			wp_register_script( 'slick-js', $this->plugin_url . 'js/slick.min.js',
+				array( 'jquery' ),
+				'3.3.7',
+				true
+			);
+			wp_enqueue_script('jquery');
+			wp_enqueue_script('slick-js');
+		});
 	}
 
 	/**
@@ -231,9 +222,7 @@ class VcCustomCarousel {
 	 */
 	public function run() {
 		$this->registerStyle();
-		$this->enqueueStyles();
 		$this->registerScripts();
-		$this->enqueueScripts();
 		$this->registerShortcode();
 	}
 
